@@ -1,0 +1,213 @@
+<x-dashboard.main title="Pengguna">
+    <div class="grid sm:grid-cols-2 gap-5 md:gap-6">
+        @foreach (['total_user', 'total_admin'] as $type)
+            <div class="flex items-center px-4 py-3 bg-white border-back rounded-xl">
+                <span
+                    class="
+                      {{ $type == 'total_user' ? 'bg-blue-300' : '' }}
+                      {{ $type == 'total_admin' ? 'bg-green-300' : '' }}
+                      p-3 mr-4 text-gray-700 rounded-full"></span>
+                <div>
+                    <p class="text-sm font-medium capitalize text-gray-600 line-clamp-1">
+                        {{ str_replace('_', ' ', $type) }}
+                    </p>
+                    <p class="text-lg font-semibold text-gray-700 line-clamp-1">
+                        {{ $type == 'total_user' ? $total_user : '' }}
+                        {{ $type == 'total_admin' ? $total_admin : '' }}
+                    </p>
+                </div>
+            </div>
+        @endforeach
+    </div>
+    <div class="flex flex-col lg:flex-row gap-5">
+        @foreach (['tambah_pengguna'] as $item)
+            <div onclick="{{ $item . '_modal' }}.showModal()"
+                class="flex items-center justify-between p-5 sm:p-7 hover:shadow-md active:scale-[.97] border border-blue-200 bg-white cursor-pointer border-back rounded-xl w-full">
+                <div>
+                    <h1 class="flex items-start gap-3 font-semibold font-[onest] sm:text-lg capitalize ">
+                        {{ str_replace('_', ' ', $item) }}
+                    </h1>
+                    <p class="text-sm opacity-60 ">
+                        {{ $item == 'tambah_pengguna' ? 'Menambahkan Pengguna' : '' }}
+                    </p>
+                </div>
+                <x-lucide-plus class="{{ $item == 'tambah_pengguna' ? '' : 'hidden' }} size-5 sm:size-7 opacity-60 " />
+            </div>
+        @endforeach
+    </div>
+    <div class="flex gap-5">
+        @foreach (['manajemen_user'] as $item)
+            <div class="flex flex-col border-back rounded-xl w-full">
+                <div class="p-5 sm:p-7 bg-white rounded-t-xl">
+                    <h1 class="flex items-start gap-3 font-semibold font-[onest] sm:text-lg capitalize">
+                        {{ str_replace('_', ' ', $item) }}
+                    </h1>
+                    <p class="text-sm opacity-60">Selalu waspada dengan data yang beresiko.</p>
+                </div>
+                <div class="flex flex-col bg-zinc-50 rounded-b-xl gap-3 divide-y pt-0 p-5 sm:p-7">
+                    <div class="overflow-x-auto">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    @foreach (['no', 'nama', 'username', 'email', 'role', 'register', ''] as $item)
+                                        <th class="uppercase font-bold">{{ $item }}</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($user as $i => $item)
+                                    <tr>
+                                        <th>{{ $i + 1 }}</th>
+                                        <td>{{ $item->nama ?? '-' }}</td>
+                                        <td class="text-blue-500 font-semibold hover:underline cursor-pointer">
+                                            {{ $item->username }}
+                                        </td>
+                                        <td>{{ $item->email }}</td>
+                                        <td class="font-semibold uppercase">{{ $item->role }}</td>
+                                        <td>{{ $item->created_at }}</td>
+                                        <td class="flex items-center gap-4">
+                                            <x-lucide-square-pen
+                                                onclick="document.getElementById('update_user_modal_{{ $item->id_user }}').showModal();initUpdate('user', {{ $item->id_barang }})"
+                                                class="size-5 hover:stroke-blue-500 cursor-pointer" />
+                                            <x-lucide-trash-2
+                                                onclick="document.getElementById('delete_modal_{{ $item->id_user }}').showModal();"
+                                                class="size-5 hover:stroke-blue-500 cursor-pointer" />
+                                            <dialog id="delete_modal_{{ $item->id_user }}"
+                                                class="modal modal-bottom sm:modal-middle">
+                                                <form
+                                                    action="{{ route('delete.pengguna', ['id_user' => $item->id_user]) }}"
+                                                    method="POST" class="modal-box bg-secondary">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <h3 class="modal-title capitalize">Hapus pengguna</h3>
+                                                    <div class="modal-body">
+                                                        <p>Apakah Anda yakin ingin menghapus pengguna
+                                                            "{{ $item->nama }}"?</p>
+                                                    </div>
+                                                    <div class="modal-action">
+                                                        <button type="button" class="btn"
+                                                            onclick="document.getElementById('delete_modal_{{ $item->id_user }}').close()">Batal</button>
+                                                        <button type="submit"
+                                                            class="btn btn-danger capitalize">Hapus</button>
+                                                    </div>
+                                                </form>
+                                            </dialog>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    </div>
+</x-dashboard.main>
+
+@foreach ($user as $i => $item)
+    <dialog id="update_user_modal_{{ $item->id_user }}" class="modal modal-bottom sm:modal-middle">
+        <form method="POST" class="modal-box" action="{{ route('update.pengguna', ['id_user' => $item->id_user]) }}">
+            @csrf
+            @method('PUT')
+            <h3 class="modal-title capitalize">
+                Update User
+            </h3>
+            <div class="modal-body">
+                <div class="input-label">
+                    <h1 class="label">Masukan Nama:</h1>
+                    <input required id="up_nama" name="up_nama" type="text" placeholder="...."
+                        value="{{ $item->nama }}">
+                    @error('nama')
+                        <span class="validated">{{ $message }}</span>
+                    @enderror
+                </div>
+                <div class="input-label">
+                    <h1 class="label">Masukan Username:</h1>
+                    <input required id="up_username" name="up_username" type="text" placeholder="...."
+                        value="{{ $item->username }}">
+                    @error('username')
+                        <span class="validated">{{ $message }}</span>
+                    @enderror
+                </div>
+                <div class="input-label">
+                    <h1 class="label">Masukan Email:</h1>
+                    <input disabled id="up_email" type="text" placeholder="...." value="{{ $item->email }}">
+                </div>
+                <div class="input-label">
+                    <h1 class="label">Masukan Role:</h1>
+                    <select required id="up_role" name="up_role" class="uppercase select select-sm">
+                        <option value="user" {{ $item->role == 'user' ? 'selected' : '' }}>USER</option>
+                        <option value="admin" {{ $item->role == 'admin' ? 'selected' : '' }}>ADMIN</option>
+                    </select>
+                    @error('role')
+                        <span class="validated">{{ $message }}</span>
+                    @enderror
+                </div>
+            </div>
+            <div class="modal-action">
+                <button onclick="update_user_modal.close()" class="btn" type="button">Tutup</button>
+                <button type="submit" class="btn btn-secondary capitalize">Update User</button>
+            </div>
+        </form>
+    </dialog>
+@endforeach
+
+@foreach (['tambah_pengguna'] as $item)
+    @php
+        $type = explode('_', $item)[1];
+        $route = 'store.' . $type;
+    @endphp
+    <dialog id="{{ $item }}_modal" class="modal modal-bottom sm:modal-middle">
+        <form action="{{ route($route) }}" method="POST" class="modal-box bg-secondary">
+            @csrf
+            <h3 class="modal-title capitalize">
+                {{ str_replace('_', ' ', $item) }}
+            </h3>
+            <div class="modal-body">
+                <div class="input-label">
+                    <h1 class="label">Masukkan Nama {{ ucfirst($type) }}:</h1>
+                    <input required name="nama" type="text">
+                    @error('nama')
+                        <span class="validated">{{ $message }}</span>
+                    @enderror
+                </div>
+                <div class="input-label">
+                    <h1 class="label">Masukkan Username {{ ucfirst($type) }}:</h1>
+                    <input required name="username" type="text">
+                    @error('username')
+                        <span class="validated">{{ $message }}</span>
+                    @enderror
+                </div>
+                <div class="input-label">
+                    <h1 class="label">Masukkan Email {{ ucfirst($type) }}:</h1>
+                    <input required name="email" type="email">
+                    @error('email')
+                        <span class="validated">{{ $message }}</span>
+                    @enderror
+                </div>
+                <div class="input-label">
+                    <h1 class="label">Masukkan Password {{ ucfirst($type) }}:</h1>
+                    <input required name="password" type="password">
+                    @error('passpword')
+                        <span class="validated">{{ $message }}</span>
+                    @enderror
+                </div>
+                <div class="input-label">
+                    <h1 class="label">Masukan Role:</h1>
+                    <select required id="role" name="role" class="uppercase select select-sm">
+                        <option value="user">USER</option>
+                        <option value="admin">ADMIN</option>
+                    </select>
+                    @error('role')
+                        <span class="validated">{{ $message }}</span>
+                    @enderror
+                </div>
+            </div>
+            <div class="modal-action">
+                <button type="button" class="btn"
+                    onclick="document.getElementById('{{ $item }}_modal').close()">Tutup</button>
+                <button type="submit" class="btn btn-success capitalize">Tambah {{ ucfirst($type) }}</button>
+            </div>
+        </form>
+    </dialog>
+@endforeach
